@@ -41,21 +41,6 @@ RUN set -eux \
 RUN --mount=type=cache,target=$PIP_CACHE_DIR,uid=1001,gid=0 \
     pip3 install --upgrade pip setuptools && pip3 install uwsgi uwsgitop
 
-# incapsulate nginx install & configure to a single layer
-RUN set -eux; \
-    curl -sSL https://nginx.org/keys/nginx_signing.key | apt-key add - && \
-    echo "deb https://nginx.org/packages/mainline/ubuntu/ $(lsb_release -cs) nginx" >> /etc/apt/sources.list && \
-    apt-get update && apt-get install -y nginx && \
-    apt-get purge --assume-yes --auto-remove --option APT::AutoRemove::RecommendsImportant=false \
-     --option APT::AutoRemove::SuggestsImportant=false && rm -rf /var/lib/apt/lists/* /tmp/* && \
-    nginx -v
-
-COPY --chown=1001:0 deploy/default.conf /etc/nginx/nginx.conf
-
-RUN set -eux; \
-    mkdir -p $OPT_DIR /var/log/nginx /var/cache/nginx /etc/nginx && \
-    chown -R 1001:0 $OPT_DIR /var/log/nginx /var/cache/nginx /etc/nginx
-
 # Copy and install middleware dependencies
 COPY --chown=1001:0 deploy/requirements-mw.txt .
 RUN --mount=type=cache,target=$PIP_CACHE_DIR,uid=1001,gid=0 \
